@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RICE Market Prioritizer — Notion New Markets (Team Edition)</title>
+<title>RICE Market Prioritizer — Notion New Markets</title>
 <style>
   :root {
     --bg: #fafafa;
@@ -34,41 +34,32 @@
     border-radius: 12px;
     padding: 24px;
     margin-bottom: 16px;
+    position: relative;
   }
-  .header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  h1 { font-size: 24px; margin-bottom: 8px; }
-  .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 16px; }
-  
-  .status-bar {
+  .status-badge {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: var(--light-bg);
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: var(--light-bg);
-    padding: 8px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
+    gap: 6px;
   }
   .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 2s infinite;
+    width: 8px; height: 8px; border-radius: 50%;
   }
-  .status-dot.offline { background: var(--red); animation: none; }
+  .status-dot.online { background: var(--green); animation: pulse 2s infinite; }
+  .status-dot.offline { background: var(--red); }
   .status-dot.connecting { background: var(--yellow); }
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
   }
-  
+  h1 { font-size: 24px; margin-bottom: 8px; }
+  .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 16px; }
   .filter-banner {
     background: #fff7ed;
     border: 1px solid #fed7aa;
@@ -78,22 +69,6 @@
     font-size: 13px;
   }
   .filter-banner strong { color: #9a3412; }
-  
-  .config-banner {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-    padding: 14px 18px;
-    margin-top: 12px;
-    font-size: 13px;
-    color: #991b1b;
-  }
-  .config-banner code {
-    background: #fff;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 12px;
-  }
   
   .tabs {
     display: flex;
@@ -133,10 +108,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
   }
   
+  /* Scoring guide */
   .guide-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -153,6 +127,7 @@
   .guide-card .scale { color: var(--text-muted); font-size: 12px; line-height: 1.7; }
   .guide-card .scale b { color: var(--text); }
   
+  /* Table */
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th {
@@ -162,6 +137,8 @@
     font-weight: 600;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
+    position: sticky;
+    top: 0;
   }
   th .help {
     font-weight: 400;
@@ -227,7 +204,6 @@
     transition: all 0.15s;
   }
   .btn:hover { background: var(--light-bg); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
   .btn-primary:hover { background: #000; }
   .btn-danger { color: var(--red); border-color: #fecaca; }
@@ -237,15 +213,8 @@
   
   .blocked-row { opacity: 0.4; background: #fef2f2; }
   .blocked-row td.score-cell { background: #fef2f2; color: var(--red); }
-  .saving-indicator {
-    color: var(--blue);
-    font-size: 11px;
-    margin-left: 4px;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .saving-indicator.show { opacity: 1; }
   
+  /* Matrix */
   .matrix-container {
     position: relative;
     width: 100%;
@@ -280,6 +249,8 @@
   }
   .axis-x-low { bottom: -22px; left: 0; }
   .axis-x-high { bottom: -22px; right: 0; }
+  .axis-y-low { top: 100%; left: -8px; transform: rotate(-90deg) translateY(-50%); transform-origin: left top; }
+  .axis-y-high { top: 0; left: -8px; transform: rotate(-90deg) translateY(-50%); transform-origin: left top; }
   
   .bubble {
     position: absolute;
@@ -293,11 +264,14 @@
     font-weight: 700;
     transform: translate(-50%, -50%);
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.2s;
     border: 2px solid #fff;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   }
-  .bubble:hover { transform: translate(-50%, -50%) scale(1.15); z-index: 10; }
+  .bubble:hover {
+    transform: translate(-50%, -50%) scale(1.15);
+    z-index: 10;
+  }
   .bubble.top1 { background: var(--green); }
   .bubble.top2 { background: #4ade80; }
   .bubble.top3 { background: #86efac; color: #064e3b; }
@@ -329,6 +303,7 @@
   .legend-item { display: flex; align-items: center; gap: 6px; }
   .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
   
+  /* Results */
   .top-pick {
     background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
     color: #fff;
@@ -354,7 +329,11 @@
   }
   .top-pick .reasoning { margin-top: 12px; font-size: 14px; opacity: 0.95; line-height: 1.6; }
   
-  .ranked-list { display: flex; flex-direction: column; gap: 8px; }
+  .ranked-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
   .ranked-item {
     display: flex;
     align-items: center;
@@ -365,16 +344,25 @@
     font-size: 13px;
   }
   .ranked-item .rank {
-    width: 32px; height: 32px;
-    background: var(--accent); color: #fff;
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    color: #fff;
     border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
   }
   .ranked-item .info { flex: 1; }
   .ranked-item .name { font-weight: 600; }
   .ranked-item .breakdown { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
-  .ranked-item .score { font-size: 18px; font-weight: 700; color: var(--green); }
+  .ranked-item .score {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--green);
+  }
   
   .empty-state {
     text-align: center;
@@ -389,7 +377,11 @@
     padding: 12px 16px;
     margin-bottom: 12px;
   }
-  details summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+  details summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+  }
   details[open] summary { margin-bottom: 8px; }
   details p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
   details code { background: #fff; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
@@ -434,25 +426,16 @@
 <div class="container">
 
 <header>
-  <div class="header-top">
-    <div>
-      <h1>🎯 RICE Market Prioritizer</h1>
-      <p class="subtitle">Team Edition · Real-time колаборація · Genesis Final Project</p>
-    </div>
-    <div class="status-bar">
-      <span class="status-dot connecting" id="statusDot"></span>
-      <span id="statusText">Підключення...</span>
-    </div>
+  <h1>🎯 RICE Market Prioritizer</h1>
+  <p class="subtitle">Інструмент для пріоритизації ринкових гіпотез Notion · Genesis Final Project</p>
+  <div class="status-badge">
+    <div class="status-dot connecting" id="statusDot"></div>
+    <span id="statusText">Підключення...</span>
   </div>
-  
   <div class="filter-banner">
     <strong>⚠️ Спершу гейт, потім скоринг.</strong> Кожна гіпотеза має пройти 3 фільтри Notion: 
-    <b>AI</b> · <b>Horizontal</b> (all-in-one) · <b>B2B/Enterprise</b>. 
+    <b>AI</b> (частина візії) · <b>Horizontal</b> (all-in-one, не вертикаль) · <b>B2B/Enterprise</b> (не B2C). 
     Якщо хоча б один = ❌, гіпотеза блокується незалежно від RICE-score.
-  </div>
-  
-  <div class="config-banner" id="configBanner" style="display:none;">
-    ⚠️ <strong>Потрібна конфігурація!</strong> Відкрийте файл і замініть <code>YOUR_SUPABASE_URL</code> та <code>YOUR_SUPABASE_ANON_KEY</code> на ваші ключі з Supabase Project Settings → API.
   </div>
 </header>
 
@@ -463,14 +446,15 @@
   <button class="tab" data-tab="guide">📖 Як скорити (гайд)</button>
 </div>
 
+<!-- ============= SCORING TAB ============= -->
 <div class="tab-content" id="tab-scoring">
   <div class="panel">
     <div class="panel-title">
-      <span>Спільний список гіпотез <span class="saving-indicator" id="savingIndicator">💾 збереження...</span></span>
+      <span>Ваші гіпотези (Realtime Sync)</span>
       <div class="actions">
         <button class="btn" id="addRow">+ Додати гіпотезу</button>
         <button class="btn" id="loadExamples">Завантажити приклади</button>
-        <button class="btn btn-danger" id="clearAll">Очистити все</button>
+        <button class="btn" id="clearAll">Очистити все</button>
       </div>
     </div>
     
@@ -479,17 +463,8 @@
       <p style="margin-top:8px;">
         <span class="formula">RICE = (Reach × Impact × Confidence) / Effort</span><br>
         Кожен критерій оцінюється від 1 до 10. Чим вищий результат — тим привабливіший ринок.
-        Гіпотези, що не пройшли всі 3 фільтри, блокуються.
+        Гіпотези, які не пройшли всі 3 фільтри (AI / Horizontal / B2B), блокуються — їх score не враховується в ранжуванні.
         Детальні шкали — у вкладці <b>"Як скорити"</b>.
-      </p>
-    </details>
-    
-    <details>
-      <summary>👥 Як працює командна синхронізація?</summary>
-      <p style="margin-top:8px;">
-        Усі зміни автоматично зберігаються в спільну базу даних і одразу з'являються в інших членів команди.
-        Не треба нічого "зберігати" — просто редагуйте поля. Якщо двоє редагують одну й ту ж гіпотезу 
-        одночасно, виграє той хто зробив зміну останнім ("last write wins").
       </p>
     </details>
     
@@ -514,81 +489,147 @@
         </tbody>
       </table>
     </div>
+    
+    <p style="margin-top:12px; font-size: 12px; color: var(--text-muted);">
+      💡 <b>Підказка:</b> заповнюйте поступово — кожне поле автоматично оновлює score та ранг. 
+      Дані зберігаються в базі Supabase і синхронізуються між пристроями.
+    </p>
   </div>
 </div>
 
+<!-- ============= MATRIX TAB ============= -->
 <div class="tab-content" id="tab-matrix" style="display:none;">
   <div class="panel">
-    <div class="panel-title"><span>Strategic Value vs GTM Complexity</span></div>
+    <div class="panel-title">
+      <span>Strategic Value vs GTM Complexity</span>
+    </div>
     <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
-      Розмір кружка = Reach. Зеленим виділено ТОП-3 за RICE. Заблоковані гіпотези не показуються.
+      Розмір кружка = Reach (розмір ринку). Зеленим виділено ТОП-3 за RICE.
+      Заблоковані гіпотези (не пройшли фільтри) не показуються.
     </p>
+    
     <div style="position: relative; padding: 0 30px 40px 30px;">
       <div class="matrix-container" id="matrix">
         <div class="quadrant-label q-tl">⭐ Quick Wins<br><span style="font-weight:400; font-size:10px;">Високий impact, легкий GTM</span></div>
         <div class="quadrant-label q-tr">🎯 Big Bets<br><span style="font-weight:400; font-size:10px;">Висока цінність, складно</span></div>
         <div class="quadrant-label q-bl">⏭ Skip<br><span style="font-weight:400; font-size:10px;">Низький impact, легко</span></div>
         <div class="quadrant-label q-br">⚠️ Avoid<br><span style="font-weight:400; font-size:10px;">Низький impact, складно</span></div>
+        
         <span class="axis-label axis-x-low">← Легше (Effort low)</span>
         <span class="axis-label axis-x-high">Складніше (Effort high) →</span>
       </div>
     </div>
+    
     <div class="matrix-legend">
       <span class="legend-item"><span class="legend-dot" style="background: var(--green);"></span>ТОП-1</span>
       <span class="legend-item"><span class="legend-dot" style="background: #4ade80;"></span>ТОП-2</span>
       <span class="legend-item"><span class="legend-dot" style="background: #86efac;"></span>ТОП-3</span>
       <span class="legend-item"><span class="legend-dot" style="background: var(--blue);"></span>Інші</span>
+      <span class="legend-item">Y-вісь: Impact × Reach (стратегічна цінність)</span>
+      <span class="legend-item">X-вісь: Effort (складність виходу на ринок)</span>
     </div>
   </div>
 </div>
 
+<!-- ============= RESULTS TAB ============= -->
 <div class="tab-content" id="tab-results" style="display:none;">
   <div id="resultsContent">
-    <div class="panel"><div class="empty-state">Заповніть хоча б одну гіпотезу ➡️</div></div>
+    <div class="panel">
+      <div class="empty-state">
+        Заповніть хоча б одну гіпотезу, щоб побачити результати ➡️
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- ============= GUIDE TAB ============= -->
 <div class="tab-content" id="tab-guide" style="display:none;">
   <div class="panel">
     <div class="panel-title"><span>Шкали оцінок (адаптовані під market hypotheses)</span></div>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+      Класичний RICE розроблений для feature prioritization. Ось як адаптовані критерії під вибір нового ринку для Notion:
+    </p>
+    
     <div class="guide-grid">
       <div class="guide-card">
         <h4>📊 Reach — розмір ринку</h4>
         <div class="scale">
-          <b>1-3:</b> Нішевий, &lt;$1B TAM<br>
+          Скільки потенційних B2B клієнтів на цьому ринку?<br>
+          <b>1-3:</b> Нішевий ринок, &lt;$1B TAM<br>
           <b>4-6:</b> Середній, $1-10B TAM<br>
           <b>7-8:</b> Великий, $10-50B TAM<br>
-          <b>9-10:</b> Величезний, $50B+ TAM
+          <b>9-10:</b> Величезний, $50B+ TAM<br>
+          <i>Орієнтуйтеся на TAM/SAM з desk research.</i>
         </div>
       </div>
+      
       <div class="guide-card">
         <h4>💎 Impact — стратегічна цінність</h4>
         <div class="scale">
+          Наскільки сильно вихід на цей ринок просуне Notion?<br>
           <b>1-3:</b> Незначний impact на ARR/NRR<br>
           <b>4-6:</b> Помірний — нові use cases<br>
-          <b>7-8:</b> Сильний — expansion ACV<br>
-          <b>9-10:</b> Трансформаційний — новий revenue stream
+          <b>7-8:</b> Сильний — expansion ACV, нові tier'и<br>
+          <b>9-10:</b> Трансформаційний — новий revenue stream, defensibility<br>
+          <i>Думайте про NRR, ACV, wall-to-wall adoption.</i>
         </div>
       </div>
+      
       <div class="guide-card">
         <h4>🎯 Confidence — якість даних</h4>
         <div class="scale">
+          Наскільки ви впевнені в гіпотезі на основі ваших даних?<br>
           <b>1-3:</b> Інтуїція, нема ресерчу<br>
           <b>4-6:</b> Поверхневий desk research<br>
-          <b>7-8:</b> Глибокий ресерч + дані по конкурентах<br>
-          <b>9-10:</b> Validation з клієнтів / earnings calls
+          <b>7-8:</b> Глибокий ресерч, є дані по конкурентах та TAM<br>
+          <b>9-10:</b> Є validation з реальних клієнтів / earnings calls Notion<br>
+          <i>Це anti-bullshit фільтр — не давайте 10 без серйозного ресерчу.</i>
         </div>
       </div>
+      
       <div class="guide-card">
         <h4>⚙️ Effort — складність GTM</h4>
         <div class="scale">
-          <b>1-3:</b> Легко — продукт майже підходить<br>
-          <b>4-6:</b> Помірно — integrations + sales motion<br>
-          <b>7-8:</b> Складно — серйозний R&amp;D<br>
-          <b>9-10:</b> Дуже складно — нова команда / acquisition
+          Наскільки складно Notion буде вийти на цей ринок?<br>
+          <b>1-3:</b> Легко — продукт вже майже підходить<br>
+          <b>4-6:</b> Помірно — потрібні integrations + sales motion<br>
+          <b>7-8:</b> Складно — серйозний R&amp;D + новий sales playbook<br>
+          <b>9-10:</b> Дуже складно — потрібна окрема команда / acquisition<br>
+          <i>Effort у знаменнику: вищий effort → нижчий score.</i>
         </div>
       </div>
     </div>
+    
+    <details style="margin-top: 16px;">
+      <summary>🚨 Чому Effort оцінюється від 1 до 10, а не в людино-місяцях?</summary>
+      <p style="margin-top:8px;">
+        У класичному RICE Effort вимірюється в person-months. Але для market hypotheses ви ще не знаєте 
+        точних еstimates — це discovery, а не roadmap planning. Шкала 1-10 дозволяє швидко порівняти 
+        relative complexity. Коли перейдете до feature prioritization всередині обраного ринку — там 
+        вже використовуйте person-months.
+      </p>
+    </details>
+    
+    <details>
+      <summary>🚨 Чому фільтри — це gate, а не частина score?</summary>
+      <p style="margin-top:8px;">
+        У вашому документі фільтри (AI / Horizontal / B2B) описані як <b>"сувора вимога"</b>. 
+        Це означає бінарне рішення: pass/fail. Якщо включити фільтри в score — слабкі гіпотези з 
+        високим Reach можуть пройти. Двоступенева логіка (gate → score) гарантує, що ви не 
+        витратите час на discovery ринку, який не відповідає стратегії компанії.
+      </p>
+    </details>
+    
+    <details>
+      <summary>🎓 Що показати на захисті в Genesis</summary>
+      <p style="margin-top:8px;">
+        1. <b>Лонг-ліст усіх гіпотез</b> із позначкою, які пройшли/не пройшли фільтри (показує дисципліну).<br>
+        2. <b>Таблицю RICE</b> для тих, що пройшли (показує quantitative thinking).<br>
+        3. <b>Матрицю Value × Effort</b> з виділеним ТОП-1 (візуальний sales pitch).<br>
+        4. <b>Глибокий discovery ТОП-1 ринку</b>: тренди, конкуренти, TAM/SAM/SOM, ICP (це ваша основна робота).<br>
+        5. <b>Чому НЕ обрали ТОП-2 і ТОП-3</b> — це улюблене питання менторів. RICE дає вам цифри.
+      </p>
+    </details>
   </div>
 </div>
 
@@ -599,30 +640,43 @@
 
 <script>
 // ============= КОНФІГУРАЦІЯ =============
-// 🔧 ЗАМІНІТЬ ці 2 значення на ваші з Supabase Project Settings → API
-const SUPABASE_URL = 'https://nidxeynqfdjduojaiici.supabase.co';        // напр. 'https://abcdefgh.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZHhleW5xZmRqZHVvamFpaWNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczOTkxNzQsImV4cCI6MjA5Mjk3NTE3NH0.4geWYZ4y_nZpsmpdEkGhHRQwOqpGOgAgsfcGk2pBC3U'; // довгий ключ що починається з 'eyJ...'
-// ==========================================
+const SUPABASE_URL = 'https://nidxeynqfdjduojaiici.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZHhleW5xZmRqZHVvamFpaWNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczOTkxNzQsImV4cCI6MjA5Mjk3NTE3NH0.4geWYZ4y_nZpsmpdEkGhHRQwOqpGOgAgsfcGk2pBC3U';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let supabase = null;
+// ============= STATE =============
 let hypotheses = [];
-let isConfigured = false;
 
-// Перевіряємо чи налаштовано
-if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
-  document.getElementById('configBanner').style.display = 'block';
-  setStatus('offline', 'Не налаштовано');
-} else {
-  isConfigured = true;
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  initApp();
+// ============= EXAMPLES =============
+const examples = [
+  { name: "Enterprise Knowledge Search & Management", filter_ai: true, filter_horizontal: true, filter_b2b: true, reach: 9, impact: 9, confidence: 8, effort: 6 },
+  { name: "Asset Management (доступи, ліцензії, обладнання)", filter_ai: true, filter_horizontal: true, filter_b2b: true, reach: 7, impact: 6, confidence: 6, effort: 5 },
+  { name: "AI-powered Project Management for Enterprise", filter_ai: true, filter_horizontal: true, filter_b2b: true, reach: 8, impact: 8, confidence: 7, effort: 7 },
+  { name: "Internal Developer Documentation Hub", filter_ai: true, filter_horizontal: true, filter_b2b: true, reach: 6, impact: 7, confidence: 7, effort: 4 },
+  { name: "Habit Trackers (B2C wellness)", filter_ai: true, filter_horizontal: false, filter_b2b: false, reach: 8, impact: 3, confidence: 5, effort: 3 },
+  { name: "Corporate Social Network / HR Gamification", filter_ai: false, filter_horizontal: false, filter_b2b: true, reach: 5, impact: 3, confidence: 4, effort: 6 },
+  { name: "Compliance & Audit Workflows for Regulated Industries", filter_ai: true, filter_horizontal: false, filter_b2b: true, reach: 6, impact: 7, confidence: 5, effort: 8 },
+  { name: "Sales Enablement & RFP Response Hub", filter_ai: true, filter_horizontal: true, filter_b2b: true, reach: 7, impact: 7, confidence: 6, effort: 5 }
+];
+
+// ============= INIT =============
+async function initApp() {
+  setStatus('connecting', 'Підключення до бази...');
+  try {
+    await loadHypotheses();
+    setStatus('online', 'Online · Real-time');
+    setupRealtime();
+  } catch (err) {
+    console.error(err);
+    setStatus('offline', 'Помилка підключення');
+    showToast('Не вдалося підключитися до бази.', true);
+  }
 }
 
-// ============= STATUS =============
 function setStatus(type, text) {
   const dot = document.getElementById('statusDot');
   const txt = document.getElementById('statusText');
-  dot.className = 'status-dot ' + (type === 'online' ? '' : type);
+  dot.className = 'status-dot ' + (type === 'online' ? 'online' : type);
   txt.textContent = text;
 }
 
@@ -633,37 +687,7 @@ function showToast(message, isError = false) {
   setTimeout(() => toast.className = 'toast', 2500);
 }
 
-function showSaving() {
-  const ind = document.getElementById('savingIndicator');
-  ind.classList.add('show');
-  clearTimeout(showSaving._t);
-  showSaving._t = setTimeout(() => ind.classList.remove('show'), 600);
-}
-
-// ============= EXAMPLES =============
-const examples = [
-  { name: "Enterprise Knowledge Search & Management", filter_ai: true, filter_horizontal: true, filter_b2b: true, reach: 9, impact: 9, confidence: 8, effort: 6 },
-  { name: "Asset Management (доступи, ліцензії, обладнання)", filter_ai: true, filter_horizontal: true, filter_b2b: true, reach: 7, impact: 6, confidence: 6, effort: 5 },
-  { name: "AI-powered Project Management for Enterprise", filter_ai: true, filter_horizontal: true, filter_b2b: true, reach: 8, impact: 8, confidence: 7, effort: 7 },
-  { name: "Internal Developer Documentation Hub", filter_ai: true, filter_horizontal: true, filter_b2b: true, reach: 6, impact: 7, confidence: 7, effort: 4 },
-  { name: "Habit Trackers (B2C wellness)", filter_ai: true, filter_horizontal: false, filter_b2b: false, reach: 8, impact: 3, confidence: 5, effort: 3 },
-  { name: "Sales Enablement & RFP Response Hub", filter_ai: true, filter_horizontal: true, filter_b2b: true, reach: 7, impact: 7, confidence: 6, effort: 5 }
-];
-
-// ============= INIT =============
-async function initApp() {
-  setStatus('connecting', 'Підключення до бази...');
-  try {
-    await loadHypotheses();
-    setStatus('online', 'Online · Real-time активний');
-    setupRealtime();
-  } catch (err) {
-    console.error(err);
-    setStatus('offline', 'Помилка підключення');
-    showToast('Не вдалося підключитися до бази. Перевірте ключі та інтернет.', true);
-  }
-}
-
+// ============= SUPABASE DB =============
 async function loadHypotheses() {
   const { data, error } = await supabase
     .from('hypotheses')
@@ -671,7 +695,12 @@ async function loadHypotheses() {
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: true });
   if (error) throw error;
-  hypotheses = data || [];
+  
+  // map to local expected format (filters array)
+  hypotheses = (data || []).map(h => ({
+    ...h,
+    filters: [h.filter_ai, h.filter_horizontal, h.filter_b2b]
+  }));
   render();
 }
 
@@ -688,6 +717,7 @@ function handleRealtimeChange(payload) {
   const { eventType, new: newRow, old: oldRow } = payload;
   if (eventType === 'INSERT') {
     if (!hypotheses.find(h => h.id === newRow.id)) {
+      newRow.filters = [newRow.filter_ai, newRow.filter_horizontal, newRow.filter_b2b];
       hypotheses.push(newRow);
       hypotheses.sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
       render();
@@ -695,10 +725,10 @@ function handleRealtimeChange(payload) {
   } else if (eventType === 'UPDATE') {
     const idx = hypotheses.findIndex(h => h.id === newRow.id);
     if (idx >= 0) {
-      // Don't overwrite if user is currently typing (focus check)
       const activeEl = document.activeElement;
       const activeRowId = activeEl?.closest('tr')?.dataset?.rowId;
       if (activeRowId !== newRow.id) {
+        newRow.filters = [newRow.filter_ai, newRow.filter_horizontal, newRow.filter_b2b];
         hypotheses[idx] = newRow;
         render();
       }
@@ -709,35 +739,34 @@ function handleRealtimeChange(payload) {
   }
 }
 
-// ============= CRUD =============
+// ============= CORE FUNCTIONS =============
 async function addRow(data) {
-  if (!isConfigured) return;
-  const newItem = data || {
+  const newItem = {
     name: '',
     filter_ai: false, filter_horizontal: false, filter_b2b: false,
     reach: 5, impact: 5, confidence: 5, effort: 5,
     sort_order: hypotheses.length
   };
-  showSaving();
+  
   const { data: inserted, error } = await supabase
     .from('hypotheses')
     .insert([newItem])
     .select()
     .single();
+    
   if (error) {
     showToast('Помилка додавання: ' + error.message, true);
     return;
   }
-  // Add locally; realtime will skip duplicate
+  
   if (!hypotheses.find(h => h.id === inserted.id)) {
+    inserted.filters = [inserted.filter_ai, inserted.filter_horizontal, inserted.filter_b2b];
     hypotheses.push(inserted);
     render();
   }
 }
 
 async function deleteRow(id) {
-  if (!isConfigured) return;
-  showSaving();
   const { error } = await supabase.from('hypotheses').delete().eq('id', id);
   if (error) {
     showToast('Помилка видалення: ' + error.message, true);
@@ -755,30 +784,49 @@ async function updateField(id, field, value) {
     value = Math.max(1, Math.min(10, Number(value) || 1));
   }
   h[field] = value;
-  h.updated_at = new Date().toISOString();
   
-  // Optimistic UI update
-  render();
-  showSaving();
+  render(); // optimistic UI
   
-  // Debounce DB writes
   clearTimeout(updateField._timers?.[id + field]);
   if (!updateField._timers) updateField._timers = {};
   updateField._timers[id + field] = setTimeout(async () => {
     const { error } = await supabase
       .from('hypotheses')
-      .update({ [field]: value, updated_at: h.updated_at })
+      .update({ [field]: value, updated_at: new Date().toISOString() })
       .eq('id', id);
-    if (error) {
-      showToast('Помилка збереження: ' + error.message, true);
-    }
+    if (error) showToast('Помилка збереження: ' + error.message, true);
   }, 400);
 }
 
+async function updateFilter(id, idx, checked) {
+  const h = hypotheses.find(x => x.id === id);
+  if (!h) return;
+  h.filters[idx] = checked;
+  render(); // optimistic UI
+  
+  const fieldName = idx === 0 ? 'filter_ai' : idx === 1 ? 'filter_horizontal' : 'filter_b2b';
+  const { error } = await supabase
+    .from('hypotheses')
+    .update({ [fieldName]: checked, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) showToast('Помилка збереження: ' + error.message, true);
+}
+
+async function loadExamples() {
+  if (hypotheses.length > 0 && !confirm('Це додасть приклади до поточних гіпотез. Продовжити?')) return;
+  const toInsert = examples.map((e, i) => ({ ...e, sort_order: hypotheses.length + i }));
+  const { data, error } = await supabase.from('hypotheses').insert(toInsert).select();
+  if (error) {
+    showToast('Помилка: ' + error.message, true);
+    return;
+  }
+  const loaded = data.map(h => ({...h, filters: [h.filter_ai, h.filter_horizontal, h.filter_b2b]}));
+  hypotheses.push(...loaded);
+  render();
+}
+
 async function clearAll() {
-  if (!isConfigured) return;
-  if (!confirm('Видалити ВСІ гіпотези зі спільної бази? Це бачать усі члени команди!')) return;
-  showSaving();
+  if (!confirm('Видалити всі гіпотези з бази?')) return;
   const { error } = await supabase.from('hypotheses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   if (error) {
     showToast('Помилка: ' + error.message, true);
@@ -788,33 +836,18 @@ async function clearAll() {
   render();
 }
 
-async function loadExamples() {
-  if (!isConfigured) return;
-  if (hypotheses.length > 0 && !confirm('Це додасть приклади до поточних гіпотез. Продовжити?')) return;
-  showSaving();
-  const toInsert = examples.map((e, i) => ({ ...e, sort_order: hypotheses.length + i }));
-  const { data, error } = await supabase.from('hypotheses').insert(toInsert).select();
-  if (error) {
-    showToast('Помилка: ' + error.message, true);
-    return;
-  }
-  hypotheses = [...hypotheses, ...(data || [])];
-  render();
-}
-
-// ============= LOGIC =============
 function calcScore(h) {
   if (!h.effort || h.effort < 1) return 0;
   return ((h.reach * h.impact * h.confidence) / h.effort);
 }
 
 function passesFilters(h) {
-  return h.filter_ai && h.filter_horizontal && h.filter_b2b;
+  return h.filters[0] && h.filters[1] && h.filters[2];
 }
 
 function getRanked() {
   return hypotheses
-    .filter(h => h.name && h.name.trim() && passesFilters(h))
+    .filter(h => h.name.trim() && passesFilters(h))
     .map(h => ({ ...h, score: calcScore(h) }))
     .sort((a,b) => b.score - a.score);
 }
@@ -830,7 +863,7 @@ function renderTable() {
   const tbody = document.getElementById('tableBody');
   if (hypotheses.length === 0) {
     tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 40px; color: var(--text-muted);">
-      ${isConfigured ? 'Натисніть <b>"+ Додати гіпотезу"</b> або <b>"Завантажити приклади"</b>, щоб почати' : 'Очікування налаштування...'}
+      Натисніть <b>"+ Додати гіпотезу"</b> або <b>"Завантажити приклади"</b>, щоб почати
     </td></tr>`;
     return;
   }
@@ -840,27 +873,28 @@ function renderTable() {
   ranked.forEach((h, i) => rankMap[h.id] = i + 1);
   
   tbody.innerHTML = hypotheses.map((h, idx) => {
-    const blocked = h.name && h.name.trim() && !passesFilters(h);
+    const blocked = h.name.trim() && !passesFilters(h);
     const score = calcScore(h);
     const rank = rankMap[h.id];
     const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
     
+    // Add data-row-id for focus tracking
     return `
       <tr class="${blocked ? 'blocked-row' : ''}" data-row-id="${h.id}">
         <td>${idx + 1}</td>
         <td>
           <input type="text" class="name-input" placeholder="Напр. Enterprise Knowledge Search"
-            value="${escapeHtml(h.name || '')}" 
+            value="${escapeHtml(h.name)}" 
             onchange="updateField('${h.id}', 'name', this.value)">
         </td>
         <td class="filter-cell">
           <div class="filter-checks">
-            <label title="AI як частина візії"><input type="checkbox" ${h.filter_ai?'checked':''} 
-              onchange="updateField('${h.id}', 'filter_ai', this.checked)">AI</label>
-            <label title="Horizontal (all-in-one)"><input type="checkbox" ${h.filter_horizontal?'checked':''} 
-              onchange="updateField('${h.id}', 'filter_horizontal', this.checked)">H</label>
-            <label title="B2B / Enterprise"><input type="checkbox" ${h.filter_b2b?'checked':''} 
-              onchange="updateField('${h.id}', 'filter_b2b', this.checked)">B2B</label>
+            <label title="AI як частина візії"><input type="checkbox" ${h.filters[0]?'checked':''} 
+              onchange="updateFilter('${h.id}', 0, this.checked)">AI</label>
+            <label title="Horizontal (all-in-one)"><input type="checkbox" ${h.filters[1]?'checked':''} 
+              onchange="updateFilter('${h.id}', 1, this.checked)">H</label>
+            <label title="B2B / Enterprise"><input type="checkbox" ${h.filters[2]?'checked':''} 
+              onchange="updateFilter('${h.id}', 2, this.checked)">B2B</label>
           </div>
         </td>
         <td><input type="number" class="num-input" min="1" max="10" value="${h.reach}" 
@@ -881,15 +915,18 @@ function renderTable() {
 
 function renderMatrix() {
   const matrix = document.getElementById('matrix');
+  // Clear bubbles, keep labels
   matrix.querySelectorAll('.bubble, .bubble-tooltip').forEach(el => el.remove());
+  
   const ranked = getRanked();
   if (ranked.length === 0) return;
   
   ranked.forEach((h, idx) => {
-    const value = (h.impact * h.reach) / 10;
-    const yPct = 100 - (value / 10) * 95 - 2.5;
+    const value = (h.impact * h.reach) / 10; 
+    const yPct = 100 - (value / 10) * 95 - 2.5; 
     const xPct = (h.effort / 10) * 95 + 2.5;
-    const size = 24 + (h.reach * 2.5);
+    const size = 24 + (h.reach * 2.5); 
+    
     const klass = idx === 0 ? 'top1' : idx === 1 ? 'top2' : idx === 2 ? 'top3' : '';
     
     const bubble = document.createElement('div');
@@ -914,18 +951,18 @@ function renderMatrix() {
 function renderResults() {
   const container = document.getElementById('resultsContent');
   const ranked = getRanked();
-  const blocked = hypotheses.filter(h => h.name && h.name.trim() && !passesFilters(h));
+  const blocked = hypotheses.filter(h => h.name.trim() && !passesFilters(h));
   
   if (ranked.length === 0) {
     container.innerHTML = `<div class="panel"><div class="empty-state">
-      ${hypotheses.length === 0 ? 'Заповніть хоча б одну гіпотезу ➡️' :
+      ${hypotheses.length === 0 ? 'Заповніть хоча б одну гіпотезу, щоб побачити результати ➡️' :
         'Жодна гіпотеза не пройшла всі 3 фільтри Notion. Перевірте чек-бокси AI / Horizontal / B2B.'}
     </div></div>`;
     return;
   }
   
   const top = ranked[0];
-  const reasoning = generateReasoning(top);
+  const reasoning = generateReasoning(top, ranked);
   
   let html = `
     <div class="top-pick">
@@ -934,6 +971,7 @@ function renderResults() {
       <span class="score-badge">RICE Score: ${top.score.toFixed(1)}</span>
       <div class="reasoning">${reasoning}</div>
     </div>
+    
     <div class="panel">
       <div class="panel-title"><span>Повний ранкінг (пройшли фільтри)</span></div>
       <div class="ranked-list">
@@ -956,14 +994,15 @@ function renderResults() {
       <div class="panel">
         <div class="panel-title"><span>🚫 Заблоковано фільтрами (${blocked.length})</span></div>
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
-          Ці гіпотези не пройшли всі 3 фільтри Notion. Покажіть на захисті, що ви свідомо їх відкинули.
+          Ці гіпотези не пройшли всі 3 фільтри Notion. Покажіть їх на захисті щоб продемонструвати, 
+          що ви розглядали ширший набір ідей і свідомо їх відкинули.
         </p>
         <div class="ranked-list">
           ${blocked.map(h => {
             const failed = [];
-            if (!h.filter_ai) failed.push('AI');
-            if (!h.filter_horizontal) failed.push('Horizontal');
-            if (!h.filter_b2b) failed.push('B2B');
+            if (!h.filters[0]) failed.push('AI');
+            if (!h.filters[1]) failed.push('Horizontal');
+            if (!h.filters[2]) failed.push('B2B');
             return `
               <div class="ranked-item" style="opacity: 0.7;">
                 <div class="rank" style="background: var(--red);">✕</div>
@@ -983,15 +1022,21 @@ function renderResults() {
     const second = ranked[1];
     const gap = top.score - second.score;
     const gapPct = ((gap / second.score) * 100).toFixed(0);
+    
     html += `
       <div class="panel">
         <div class="panel-title"><span>🎓 Аргументи для захисту в Genesis</span></div>
         <p style="font-size: 13px; line-height: 1.7;">
           <b>Чому ${escapeHtml(top.name)}, а не ${escapeHtml(second.name)}?</b><br>
-          Розрив: <b>${gap.toFixed(1)} балів (${gapPct}% перевага)</b>.<br>
+          Розрив у RICE-score: <b>${gap.toFixed(1)} балів (${gapPct}% перевага)</b>.<br>
           ${gap > top.score * 0.2 ? 
-            '✅ Розрив значний — вибір ТОП-1 квантитативно захищаємий.' : 
-            '⚠️ Розрив невеликий — додайте qualitative аргументи (тренди, конкуренти, timing).'}
+            '✅ Розрив значний — ваш вибір ТОП-1 квантитативно захищаємий.' : 
+            '⚠️ Розрив невеликий — варто додати qualitative аргументи (тренди, конкуренти, timing) для посилення вибору.'}
+        </p>
+        <p style="font-size: 13px; line-height: 1.7; margin-top: 10px;">
+          <b>Наступні 30 хвилин:</b> візьміть ТОП-1 і напишіть повну гіпотезу за формулою з вашого документа 
+          (1.2 — "Якщо ми вийдемо... то ми зможемо... тому що..."), а потім переходьте до глибокого discovery: 
+          TAM/SAM/SOM, конкуренти, ICP.
         </p>
       </div>
     `;
@@ -1000,16 +1045,18 @@ function renderResults() {
   container.innerHTML = html;
 }
 
-function generateReasoning(top) {
+function generateReasoning(top, all) {
   const reasons = [];
   if (top.reach >= 7) reasons.push('великий ринок');
   if (top.impact >= 7) reasons.push('висока стратегічна цінність');
   if (top.confidence >= 7) reasons.push('добре обґрунтована даними');
   if (top.effort <= 5) reasons.push('помірна складність GTM');
+  
   if (reasons.length === 0) {
-    return `Найвищий RICE серед валідних гіпотез. Розгляньте підвищення Confidence через додатковий ресерч.`;
+    return `Найвищий RICE серед валідних гіпотез. Розгляньте можливість підвищити Confidence через додатковий ресерч.`;
   }
-  return `Цей ринок виграє завдяки: ${reasons.join(', ')}. Найсильніший кандидат для глибокого discovery.`;
+  
+  return `Цей ринок виграє завдяки комбінації: ${reasons.join(', ')}. Це робить його найсильнішим кандидатом для глибокого discovery (тренди, конкуренти, TAM/SAM/SOM, ICP).`;
 }
 
 function escapeHtml(s) {
@@ -1031,8 +1078,11 @@ document.querySelectorAll('.tab').forEach(tab => {
 
 // ============= BUTTONS =============
 document.getElementById('addRow').addEventListener('click', () => addRow());
-document.getElementById('clearAll').addEventListener('click', clearAll);
-document.getElementById('loadExamples').addEventListener('click', loadExamples);
+document.getElementById('clearAll').addEventListener('click', () => clearAll());
+document.getElementById('loadExamples').addEventListener('click', () => loadExamples());
+
+// Start app
+initApp();
 </script>
 
 </div>
