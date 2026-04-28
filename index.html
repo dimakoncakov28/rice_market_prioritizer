@@ -642,7 +642,7 @@
 // ============= КОНФІГУРАЦІЯ =============
 const SUPABASE_URL = 'https://nidxeynqfdjduojaiici.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZHhleW5xZmRqZHVvamFpaWNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczOTkxNzQsImV4cCI6MjA5Mjk3NTE3NH0.4geWYZ4y_nZpsmpdEkGhHRQwOqpGOgAgsfcGk2pBC3U';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============= STATE =============
 let hypotheses = [];
@@ -689,7 +689,7 @@ function showToast(message, isError = false) {
 
 // ============= SUPABASE DB =============
 async function loadHypotheses() {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('hypotheses')
     .select('*')
     .order('sort_order', { ascending: true })
@@ -705,7 +705,7 @@ async function loadHypotheses() {
 }
 
 function setupRealtime() {
-  supabase
+  db
     .channel('hypotheses-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'hypotheses' }, (payload) => {
       handleRealtimeChange(payload);
@@ -748,7 +748,7 @@ async function addRow(data) {
     sort_order: hypotheses.length
   };
   
-  const { data: inserted, error } = await supabase
+  const { data: inserted, error } = await db
     .from('hypotheses')
     .insert([newItem])
     .select()
@@ -767,7 +767,7 @@ async function addRow(data) {
 }
 
 async function deleteRow(id) {
-  const { error } = await supabase.from('hypotheses').delete().eq('id', id);
+  const { error } = await db.from('hypotheses').delete().eq('id', id);
   if (error) {
     showToast('Помилка видалення: ' + error.message, true);
     return;
@@ -790,7 +790,7 @@ async function updateField(id, field, value) {
   clearTimeout(updateField._timers?.[id + field]);
   if (!updateField._timers) updateField._timers = {};
   updateField._timers[id + field] = setTimeout(async () => {
-    const { error } = await supabase
+    const { error } = await db
       .from('hypotheses')
       .update({ [field]: value, updated_at: new Date().toISOString() })
       .eq('id', id);
@@ -805,7 +805,7 @@ async function updateFilter(id, idx, checked) {
   render(); // optimistic UI
   
   const fieldName = idx === 0 ? 'filter_ai' : idx === 1 ? 'filter_horizontal' : 'filter_b2b';
-  const { error } = await supabase
+  const { error } = await db
     .from('hypotheses')
     .update({ [fieldName]: checked, updated_at: new Date().toISOString() })
     .eq('id', id);
@@ -815,7 +815,7 @@ async function updateFilter(id, idx, checked) {
 async function loadExamples() {
   if (hypotheses.length > 0 && !confirm('Це додасть приклади до поточних гіпотез. Продовжити?')) return;
   const toInsert = examples.map((e, i) => ({ ...e, sort_order: hypotheses.length + i }));
-  const { data, error } = await supabase.from('hypotheses').insert(toInsert).select();
+  const { data, error } = await db.from('hypotheses').insert(toInsert).select();
   if (error) {
     showToast('Помилка: ' + error.message, true);
     return;
@@ -827,7 +827,7 @@ async function loadExamples() {
 
 async function clearAll() {
   if (!confirm('Видалити всі гіпотези з бази?')) return;
-  const { error } = await supabase.from('hypotheses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await db.from('hypotheses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   if (error) {
     showToast('Помилка: ' + error.message, true);
     return;
